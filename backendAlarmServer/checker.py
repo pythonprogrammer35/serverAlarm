@@ -3,6 +3,21 @@ import requests
 import json
 import time
 from typing import List
+import keyboard
+from pynput import keyboard
+
+def on_press(key):
+    try:
+        if key.char == 'q': # Stop alarm if 'q' is pressed
+            print("Quitting...")
+            exit()
+            return False # Stops the listener
+    except AttributeError:
+        pass
+
+# Start the listener in a non-blocking way
+#listener = keyboard.Listener(on_press=on_press)
+#listener.start()
 
 app = FastAPI()
 
@@ -31,12 +46,15 @@ controlChecker = False
 async def websocket_endpoint(websocket: WebSocket):
     global controlChecker
     await manager.connect(websocket)
+    
+    await websocket.send_text("Welcome to the server!")
     while controlChecker == False:
         print("jab")
         controlChecker = True
         try:
             print("teep")
             data = await websocket.receive_text()
+            print(data)
             await websocket.send_text(f"Recieved message{data}")
             print("step")
             
@@ -45,8 +63,9 @@ async def websocket_endpoint(websocket: WebSocket):
         finally:
             #manager.disconnect(websocket)
             pass
-
-def check_server():
+    #manager.disconnect(websocket)
+    await check_server_run(websocket)
+async def check_server(websocket: WebSocket):
     url = "https://felisha-dorsoventral-shaly.ngrok-free.dev/normal/"
 
     response = requests.get(url)
@@ -55,13 +74,17 @@ def check_server():
         pass
         print("connection successful")
     else:
-        #webhook code here
+        #websocket code here
         print("problem occured")
-
-
-        pass
-
-while controlChecker == True:
-    check_server()
-    #waits for 10 minutes
-    time.sleep(6)
+        await websocket.send_text("Warning, server offline")
+        print("recieved?")
+        
+async def check_server_run(websocket: WebSocket):
+    print("testing")
+    print(controlChecker)
+    while controlChecker == True:
+        
+        print("running")
+        await check_server(websocket)
+        #waits for 10 minutes
+        time.sleep(6)
