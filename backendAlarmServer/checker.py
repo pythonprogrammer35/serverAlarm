@@ -66,7 +66,7 @@ async def websocket_endpoint(websocket: WebSocket):
     #manager.disconnect(websocket)
     await check_server_run(websocket)
 async def check_server(websocket: WebSocket):
-    url = "https://felisha-dorsoventral-shaly.ngrok-free.dev/normal/"
+    url = ""
 
     response = requests.get(url)
 
