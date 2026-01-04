@@ -66,7 +66,7 @@ async def websocket_endpoint(websocket: WebSocket):
     #manager.disconnect(websocket)
     await check_server_run(websocket)
 async def check_server(websocket: WebSocket):
-    url = ""
+    url = "https://felisha-dorsoventral-shaly.ngrok-free.dev/normal/"
 
     response = requests.get(url)
 
@@ -76,9 +76,18 @@ async def check_server(websocket: WebSocket):
     else:
         #websocket code here
         print("problem occured")
-        await websocket.send_text("Warning, server offline")
+        await websocket.send_text(f"Warning, server offline{time.time()}")
+        data = await websocket.receive_text()
+        print("got response")
+        print(data) 
         print("recieved?")
-        
+
+async def connectionTest(websocket: WebSocket):
+    await websocket.send_text(f"Testing are you there{time.time()}")
+    data = await websocket.receive_text()
+    print("got response")
+    print(data) 
+
 async def check_server_run(websocket: WebSocket):
     print("testing")
     print(controlChecker)
