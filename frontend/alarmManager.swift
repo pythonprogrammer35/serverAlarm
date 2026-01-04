@@ -1,9 +1,50 @@
 import Foundation
+import UserNotifications
+
+
 
 class alarmManager: ObservableObject {
     private var webSocketTask: URLSessionWebSocketTask?
     @Published var isConnected = false
     
+    
+    func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+            if success {
+                print("Notifications authorized")
+            } else if let error = error {
+                print("Notification error: \(error.localizedDescription)")
+            }
+        }
+    }
+    init() {
+            requestNotificationPermission()
+        }
+
+    func triggerLocalNotification(title: String, body: String) {
+        // 1. Create the content object (Note the spelling: Mutable)
+        let notificationContent = UNMutableNotificationContent()
+        notificationContent.title = title
+        notificationContent.body = body
+        notificationContent.sound = .default
+
+        // 2. Create the trigger (fire in 1 second)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        
+        // 3. Create the request
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: notificationContent,
+            trigger: trigger
+        )
+        
+        // 4. Add the request to the notification center
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error scheduling notification: \(error.localizedDescription)")
+            }
+        }
+    }
     func connect() {
         let ngrokUrl = "ca747afc10c7.ngrok-free.app" // Match your Python test ID
         guard let url = URL(string: "wss://\(ngrokUrl)/ws") else { return }
@@ -70,6 +111,9 @@ class alarmManager: ObservableObject {
                 switch message {
                 case .string(let text):
                     print("Server says: \(text)")
+                    if(text.contains("Warning")) {
+                        self?.triggerLocalNotification(title: "⚠️ Alarm Alert", body: text)
+                    }
                     
                 default:
                     print("nopey")
@@ -80,7 +124,7 @@ class alarmManager: ObservableObject {
                 var dateString = formatter.string(from: Date())
 
                 // 3. Send it back to the server
-                self?.sendMessage("Current Date: \(dateString)")
+                
                 self?.sendMessage("Hello back from SwiftUI!: \(currentDate)")
                 // RECURSION: This is how we keep the "While True" loop going in Swift
                 print("seee he")
